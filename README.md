@@ -16,6 +16,14 @@
   - Appropriate Control
   - Optional: Creation of new features (WFS-T)
 
-## What to do next (16.05.24):
-  - Implement features, first: Use of location Sensor (GNSS)
+## Steps to get current repo up and running with React Native Expo:
+  - install expo App on your phone
+  - run "npm start" in this repo
+  - scan qr code
+
+## Current features
+  - two views, one holds a text view, one holds a built-in map
+  - shows current position on the map
+
+## What to do next:
 
