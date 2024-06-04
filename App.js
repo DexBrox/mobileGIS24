@@ -6,7 +6,7 @@ export default function App() {
   return (
     <>
     <View style={styles.textBox}>
-      <Text style={styles.smallText}>Wer das liest ist doof</Text>
+      <Text style={styles.smallText}>Hello GIK!</Text>
       <StatusBar style="auto" />
     </View>
 
