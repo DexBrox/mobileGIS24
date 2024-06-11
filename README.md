@@ -18,6 +18,8 @@
 
 ## Steps to get current repo up and running with React Native Expo:
   - install expo App on your phone
+  - npm i -g expo-cli
+  - expo install expo-location
   - run "npm start" in this repo
   - scan qr code
 
