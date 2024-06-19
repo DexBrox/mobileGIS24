@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View } from 'react-native';
-import MapView from 'react-native-maps';
+import WebView from 'react-native-webview';
 import * as Location from 'expo-location';
 
 export default function App() {
@@ -35,11 +35,10 @@ export default function App() {
         <Text style={styles.smallText}>{text}</Text>
       </View>
 
-      <View style={styles.mapBox}>
-        <MapView
-          style={styles.map}
-          showsUserLocation={true}
-          followsUserLocation={true}
+      <View style={styles.webViewContainer}>
+        <WebView
+          originWhitelist={['*']}
+          source={require('./assets/index.html')}
         />
       </View>
 
@@ -60,13 +59,8 @@ const styles = StyleSheet.create({
     fontSize: 20,
     color: '#fff',
   },
-  mapBox: {
+  webViewContainer: {
     flex: 1,
     backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  map: {
-    ...StyleSheet.absoluteFillObject,
   },
 });
