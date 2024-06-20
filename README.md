@@ -28,4 +28,10 @@
   - shows current position on the map
 
 ## What to do next:
+OSM overpath API -> filtering for tourist spots. 
+Download Polygons/Points with different attributes
+selection of attributes in QGIS 
+Attributes: Name, Location, maybe more 
+-> Paul prepares data for us on server
+include as WFS in App (with openlayers)
 
