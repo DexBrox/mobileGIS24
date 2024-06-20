@@ -13,14 +13,14 @@
     <style>
         /* Set the map height */
         #map {
-            height: 80%;
+            height: 100%;
         }
 
         body,
         html {
             margin: 0;
             padding: 0;
-            height: 80%;
+            height: 100%;
         }
     </style>
 </head>
@@ -37,16 +37,12 @@
                 controls: ol.control.defaults({ attribution: false }).extend([attribution]),
                 layers: [
                     new ol.layer.Tile({
-                        source: new ol.source.OSM({
-                            url: 'https://tile.openstreetmap.be/osmbe/{z}/{x}/{y}.png',
-                            attributions: [ol.source.OSM.ATTRIBUTION, 'Tiles courtesy of <a href="https://geo6.be/">GEO-6</a>'],
-                            maxZoom: 18
-                        })
+                        source: new ol.source.OSM()
                     })
                 ],
                 target: 'map',
                 view: new ol.View({
-                    center: ol.proj.fromLonLat([4.35247, 50.84673]),
+                    center: ol.proj.fromLonLat([9.0, 49.0]),
                     maxZoom: 18,
                     zoom: 12
                 })
