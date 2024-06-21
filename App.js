@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View } from 'react-native';
 import WebView from 'react-native-webview';
@@ -7,6 +7,7 @@ import * as Location from 'expo-location';
 export default function App() {
   const [location, setLocation] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
+  const webViewRef = useRef(null);
 
   useEffect(() => {
     (async () => {
@@ -18,6 +19,13 @@ export default function App() {
 
       let location = await Location.getCurrentPositionAsync({});
       setLocation(location);
+
+      if (webViewRef.current) {
+        webViewRef.current.postMessage(JSON.stringify({
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude
+        }));
+      }
     })();
   }, []);
 
@@ -37,8 +45,14 @@ export default function App() {
 
       <View style={styles.webViewContainer}>
         <WebView
+          ref={webViewRef}
           originWhitelist={['*']}
           source={require('./assets/index.html')}
+          javaScriptEnabled={true}
+          domStorageEnabled={true}
+          onMessage={(event) => {
+            console.log(event.nativeEvent.data);
+          }}
         />
       </View>
 
