@@ -6,7 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OpenLayers Map</title>
     <!-- Include OpenLayers CSS and JS -->
-    <link rel="stylesheet" href="https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v5.3.0/css/ol.css" type="text/css">    
+    <link rel="stylesheet" href="https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v5.3.0/css/ol.css"
+        type="text/css">
     <script src="https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v5.3.0/build/ol.js"></script>
 
     <style>
@@ -70,10 +71,13 @@
                     ]
                 }),
                 style: new ol.style.Style({
-                    image: new ol.style.Icon({
-                        src: 'https://openlayers.org/en/latest/examples/data/icon.png',
-                        anchor: [0.5, 1],
-                        scale: 0.1 // Scale the icon to a smaller size
+                    image: new ol.style.Circle({
+                        radius: 10,
+                        fill: new ol.style.Fill({ color: 'rgba(0, 0, 255, 0.5)' }),
+                        stroke: new ol.style.Stroke({
+                            color: 'blue',
+                            width: 2
+                        })
                     })
                 })
             });
@@ -82,13 +86,13 @@
         }
 
         // Listen for messages from React Native WebView
-        document.addEventListener('message', function(event) {
+        document.addEventListener('message', function (event) {
             var location = JSON.parse(event.data);
             updateMapCenter(location.latitude, location.longitude);
         });
-        
+
         // For Android devices
-        window.addEventListener('message', function(event) {
+        window.addEventListener('message', function (event) {
             var location = JSON.parse(event.data);
             updateMapCenter(location.latitude, location.longitude);
         });
