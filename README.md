@@ -35,3 +35,10 @@ Attributes: Name, Location, maybe more
 -> Paul prepares data for us on server
 include as WFS in App (with openlayers)
 
+
+# Meeting in class 27.6.
+Data is hosted on GeoServer of Paul, credentials will be provided as well as example requests
+Layers can be created on geoserver -> WFS for Datapoints 
+Include as WFS-Layer in OpenLayers -> http-get request as geo-json to display the data
+add interactive elements (like highlighting, and getFeatureInfo)
+modification of data and database is possible with special credentials or give Paul new Data to put on the server -> start with only queriing the data
