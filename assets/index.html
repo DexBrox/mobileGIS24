@@ -32,41 +32,15 @@
         var attribution = new ol.control.Attribution({
             collapsible: false
         });
-        var map = new ol.Map({
-            controls: ol.control.defaults({ attribution: false }).extend([attribution]),
-            layers: [
-                new ol.layer.Tile({
-                    source: new ol.source.OSM()
-                })
-            ],
-            target: 'map',
-            view: new ol.View({
-                center: ol.proj.fromLonLat([9.0, 49.0]),
-                maxZoom: 18,
-                zoom: 12
-            })
-        });
 
-        // Function to update the map center with new coordinates and add a marker
-        function updateMapCenter(latitude, longitude) {
-            var view = map.getView();
-            var newCenter = ol.proj.fromLonLat([longitude, latitude]);
-            view.setCenter(newCenter);
-            view.setZoom(12); // You can adjust the zoom level as needed
-
-            // Remove any existing markers
-            map.getLayers().forEach(layer => {
-                if (layer.get('name') === 'marker') {
-                    map.removeLayer(layer);
-                }
-            });
-
-            // Add a new marker
-            var marker = new ol.layer.Vector({
+        // Function to create a marker layer
+        function createMarkerLayer(latitude, longitude) {
+            var position = ol.proj.fromLonLat([longitude, latitude]);
+            return new ol.layer.Vector({
                 source: new ol.source.Vector({
                     features: [
                         new ol.Feature({
-                            geometry: new ol.geom.Point(newCenter)
+                            geometry: new ol.geom.Point(position)
                         })
                     ]
                 }),
@@ -81,21 +55,76 @@
                     })
                 })
             });
-            marker.set('name', 'marker');
-            map.addLayer(marker);
         }
 
-        // Listen for messages from React Native WebView
-        document.addEventListener('message', function (event) {
-            var location = JSON.parse(event.data);
-            updateMapCenter(location.latitude, location.longitude);
-        });
+        // Function to initialize the map
+        function initializeMap(latitude, longitude) {
+            var position = ol.proj.fromLonLat([longitude, latitude]);
+            var map = new ol.Map({
+                controls: ol.control.defaults({ attribution: false }).extend([attribution]),
+                layers: [
+                    new ol.layer.Tile({
+                        source: new ol.source.OSM()
+                    }),
+                    createMarkerLayer(latitude, longitude)
+                ],
+                target: 'map',
+                view: new ol.View({
+                    center: position,
+                    maxZoom: 18,
+                    zoom: 12
+                })
+            });
 
-        // For Android devices
-        window.addEventListener('message', function (event) {
-            var location = JSON.parse(event.data);
-            updateMapCenter(location.latitude, location.longitude);
-        });
+            // Function to update the map center with new coordinates and add a marker
+            function updateMapCenter(latitude, longitude) {
+                var view = map.getView();
+                var newCenter = ol.proj.fromLonLat([longitude, latitude]);
+                view.setCenter(newCenter);
+                view.setZoom(12); // You can adjust the zoom level as needed
+
+                // Remove any existing markers
+                map.getLayers().forEach(layer => {
+                    if (layer.get('name') === 'marker') {
+                        map.removeLayer(layer);
+                    }
+                });
+
+                // Add a new marker
+                var marker = createMarkerLayer(latitude, longitude);
+                marker.set('name', 'marker');
+                map.addLayer(marker);
+            }
+
+            // Listen for messages from React Native WebView
+            document.addEventListener('message', function (event) {
+                var location = JSON.parse(event.data);
+                updateMapCenter(location.latitude, location.longitude);
+            });
+
+            // For Android devices
+            window.addEventListener('message', function (event) {
+                var location = JSON.parse(event.data);
+                updateMapCenter(location.latitude, location.longitude);
+            });
+        }
+
+        // Get the current position and initialize the map
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function (position) {
+                var latitude = position.coords.latitude;
+                var longitude = position.coords.longitude;
+                initializeMap(latitude, longitude);
+            }, function (error) {
+                console.error('Error occurred while retrieving location:', error);
+                // Fallback to a default location if geolocation fails
+                initializeMap(49.0, 9.0);
+            });
+        } else {
+            console.error('Geolocation is not supported by this browser.');
+            // Fallback to a default location if geolocation is not supported
+            initializeMap(49.0, 9.0);
+        }
     </script>
 </body>
 
