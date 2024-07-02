@@ -14,6 +14,7 @@
         /* Set the map height */
         #map {
             height: 100%;
+            width: 100%;
         }
 
         body,
@@ -21,12 +22,27 @@
             margin: 0;
             padding: 0;
             height: 100%;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        #status {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 5px;
+            border: 1px solid #ccc;
         }
     </style>
 </head>
 
 <body>
     <div id="map"></div>
+    <div id="status">Loading...</div>
 
     <script>
         var attribution = new ol.control.Attribution({
@@ -57,6 +73,51 @@
             });
         }
 
+        // Function to create WFS layer
+        function createWfsLayer() {
+            var vectorSource = new ol.source.Vector({
+                format: new ol.format.GeoJSON(),
+                url: 'http://193.196.36.78:8080/geoserver/MobileGIS/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=MobileGIS:group_3_data&maxFeatures=50&outputformat=application/json&cql_filter=bbox(geom,8.32083,48.94296,8.50155,49.05494)',
+                strategy: ol.loadingstrategy.bbox
+            });
+
+            vectorSource.on('addfeature', function (event) {
+                document.getElementById('status').textContent = 'Feature added: ' + event.feature.getGeometry().getType();
+                console.log('Feature added:', event.feature);
+            });
+
+            vectorSource.on('featuresloadend', function (event) {
+                document.getElementById('status').textContent = 'Features loaded: ' + vectorSource.getFeatures().length;
+                console.log('Features loaded:', vectorSource.getFeatures().length);
+            });
+
+            vectorSource.on('featuresloaderror', function (event) {
+                document.getElementById('status').textContent = 'Error loading features.';
+                console.error('Features load error:', event);
+            });
+
+            return new ol.layer.Vector({
+                source: vectorSource,
+                style: new ol.style.Style({
+                    stroke: new ol.style.Stroke({
+                        color: 'red',
+                        width: 2
+                    }),
+                    fill: new ol.style.Fill({
+                        color: 'rgba(255, 0, 0, 0.1)'
+                    }),
+                    image: new ol.style.Circle({
+                        radius: 5,
+                        fill: new ol.style.Fill({ color: 'red' }),
+                        stroke: new ol.style.Stroke({
+                            color: 'red',
+                            width: 1
+                        })
+                    })
+                })
+            });
+        }
+
         // Function to initialize the map
         function initializeMap(latitude, longitude) {
             var position = ol.proj.fromLonLat([longitude, latitude]);
@@ -66,7 +127,8 @@
                     new ol.layer.Tile({
                         source: new ol.source.OSM()
                     }),
-                    createMarkerLayer(latitude, longitude)
+                    createMarkerLayer(latitude, longitude),
+                    createWfsLayer() // Add WFS layer
                 ],
                 target: 'map',
                 view: new ol.View({
