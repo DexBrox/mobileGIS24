@@ -151,6 +151,46 @@
             });
         }
 
+        function getRoute(destination) {
+            var start = ol.proj.toLonLat(currentPosition);
+            var end = ol.proj.toLonLat(destination);
+            var apiKey = '5b3ce3597851110001cf624878f3be077a104fa39fe2aa2677d25dcb';
+
+            var url = `https://api.openrouteservice.org/v2/directions/driving-car?api_key=${apiKey}&start=${start[0]},${start[1]}&end=${end[0]},${end[1]}`;
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        throw new Error(data.error.message);
+                    }
+                    var route = data.features[0].geometry.coordinates;
+                    var routeCoords = route.map(coord => ol.proj.fromLonLat([coord[0], coord[1]]));
+                    var routeFeature = new ol.Feature({
+                        geometry: new ol.geom.LineString(routeCoords)
+                    });
+
+                    routeFeature.setStyle(new ol.style.Style({
+                        stroke: new ol.style.Stroke({
+                            color: '#ff0000',
+                            width: 4
+                        })
+                    }));
+
+                    navLayer.getSource().clear();
+                    navLayer.getSource().addFeature(routeFeature);
+
+                    var routeExtent = routeFeature.getGeometry().getExtent();
+                    map.getView().fit(routeExtent, { padding: [50, 50, 50, 50], maxZoom: 18 });
+
+                    document.getElementById('status').textContent = 'Route displayed.';
+                })
+                .catch(error => {
+                    console.error('Error fetching route:', error);
+                    document.getElementById('status').textContent = 'Error fetching route: ' + error.message;
+                });
+        }
+
         // Function to initialize the map
         function initializeMap(latitude, longitude) {
             currentPosition = ol.proj.fromLonLat([longitude, latitude]);
@@ -185,6 +225,8 @@
                 })
             });
 
+            document.getElementById('status').textContent = 'Map initialized at: ' + latitude + ', ' + longitude;
+
             // Function to update the map center with new coordinates and add a marker
             function updateMapCenter(latitude, longitude) {
                 var view = map.getView();
@@ -195,10 +237,12 @@
                 // Update the current position
                 currentPosition = newCenter;
 
-                // Remove the existing user marker
-                map.removeLayer(userMarkerLayer);
+                // Remove the existing user marker layer if it exists
+                if (userMarkerLayer) {
+                    map.removeLayer(userMarkerLayer);
+                }
 
-                // Add a new user marker
+                // Add a new user marker layer
                 userMarkerLayer = createMarkerLayer(latitude, longitude);
                 map.addLayer(userMarkerLayer);
             }
@@ -207,12 +251,14 @@
             document.addEventListener('message', function (event) {
                 var location = JSON.parse(event.data);
                 updateMapCenter(location.latitude, location.longitude);
+                console.log('Received location:', location);
             });
 
             // For Android devices
             window.addEventListener('message', function (event) {
                 var location = JSON.parse(event.data);
                 updateMapCenter(location.latitude, location.longitude);
+                console.log('Received location:', location);
             });
 
             // Add click event to display feature info and draw navigation line
@@ -229,12 +275,7 @@
 
                     // Draw navigation line
                     var destination = feature.getGeometry().getCoordinates();
-                    var navLine = new ol.Feature({
-                        geometry: new ol.geom.LineString([currentPosition, destination])
-                    });
-                    navLayer.getSource().clear();
-                    navLayer.getSource().addFeature(navLine);
-
+                    getRoute(destination);
                 }, {
                     layerFilter: function (layer) {
                         return layer === wfsLayer;
@@ -253,6 +294,19 @@
                 console.error('Error occurred while retrieving location:', error);
                 // Fallback to a default location if geolocation fails
                 initializeMap(49.0, 9.0);
+            });
+
+            navigator.geolocation.watchPosition(function (position) {
+                var latitude = position.coords.latitude;
+                var longitude = position.coords.longitude;
+                updateMapCenter(latitude, longitude);
+                console.log('Updated location:', { latitude, longitude });
+            }, function (error) {
+                console.error('Error occurred while watching position:', error);
+            }, {
+                enableHighAccuracy: true,
+                maximumAge: 0,
+                timeout: 5000
             });
         } else {
             console.error('Geolocation is not supported by this browser.');
