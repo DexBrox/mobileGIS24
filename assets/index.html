@@ -77,6 +77,11 @@
             collapsible: false
         });
 
+        var currentPosition;
+        var map;
+        var navLayer;
+        var userMarkerLayer;
+
         // Function to create a marker layer
         function createMarkerLayer(latitude, longitude) {
             var position = ol.proj.fromLonLat([longitude, latitude]);
@@ -148,20 +153,33 @@
 
         // Function to initialize the map
         function initializeMap(latitude, longitude) {
-            var position = ol.proj.fromLonLat([longitude, latitude]);
+            currentPosition = ol.proj.fromLonLat([longitude, latitude]);
             var wfsLayer = createWfsLayer();
-            var map = new ol.Map({
+            navLayer = new ol.layer.Vector({
+                source: new ol.source.Vector(),
+                style: new ol.style.Style({
+                    stroke: new ol.style.Stroke({
+                        color: 'blue',
+                        width: 2
+                    })
+                })
+            });
+
+            userMarkerLayer = createMarkerLayer(latitude, longitude);
+
+            map = new ol.Map({
                 controls: ol.control.defaults({ attribution: false }).extend([attribution]),
                 layers: [
                     new ol.layer.Tile({
                         source: new ol.source.OSM()
                     }),
-                    createMarkerLayer(latitude, longitude),
-                    wfsLayer // Add WFS layer
+                    userMarkerLayer,
+                    wfsLayer, // Add WFS layer
+                    navLayer // Add navigation layer
                 ],
                 target: 'map',
                 view: new ol.View({
-                    center: position,
+                    center: currentPosition,
                     maxZoom: 18,
                     zoom: 12
                 })
@@ -174,17 +192,15 @@
                 view.setCenter(newCenter);
                 view.setZoom(12); // You can adjust the zoom level as needed
 
-                // Remove any existing markers
-                map.getLayers().forEach(layer => {
-                    if (layer.get('name') === 'marker') {
-                        map.removeLayer(layer);
-                    }
-                });
+                // Update the current position
+                currentPosition = newCenter;
 
-                // Add a new marker
-                var marker = createMarkerLayer(latitude, longitude);
-                marker.set('name', 'marker');
-                map.addLayer(marker);
+                // Remove the existing user marker
+                map.removeLayer(userMarkerLayer);
+
+                // Add a new user marker
+                userMarkerLayer = createMarkerLayer(latitude, longitude);
+                map.addLayer(userMarkerLayer);
             }
 
             // Listen for messages from React Native WebView
@@ -199,17 +215,26 @@
                 updateMapCenter(location.latitude, location.longitude);
             });
 
-            // Add click event to display feature info
+            // Add click event to display feature info and draw navigation line
             map.on('singleclick', function (evt) {
                 map.forEachFeatureAtPixel(evt.pixel, function (feature) {
                     var properties = feature.getProperties();
                     delete properties.geometry; // Remove geometry to make it more readable
                     var table = '<table>';
                     table += '<tr><th>Attraction</th><td>' + (properties.attraction || 'N/A') + '</td></tr>';
-                    table += '<tr><th>Name</th><td>' + (properties.name_en || 'N/A') + '</td></tr>';
+                    table += '<tr><th>Name</th><td>' + (properties.name || 'N/A') + '</td></tr>';
                     table += '<tr><th>Wheelchair Accessible</th><td>' + (properties.wheelchair_accessible || 'N/A') + '</td></tr>';
                     table += '</table>';
                     document.getElementById('info').innerHTML = table;
+
+                    // Draw navigation line
+                    var destination = feature.getGeometry().getCoordinates();
+                    var navLine = new ol.Feature({
+                        geometry: new ol.geom.LineString([currentPosition, destination])
+                    });
+                    navLayer.getSource().clear();
+                    navLayer.getSource().addFeature(navLine);
+
                 }, {
                     layerFilter: function (layer) {
                         return layer === wfsLayer;
