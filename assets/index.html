@@ -37,12 +37,40 @@
             padding: 5px;
             border: 1px solid #ccc;
         }
+
+        #info {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 5px;
+            border: 1px solid #ccc;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            border: 1px solid #ccc;
+            padding: 5px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f4f4f4;
+        }
     </style>
 </head>
 
 <body>
     <div id="map"></div>
     <div id="status">Loading...</div>
+    <div id="info">Click on a feature to get more info</div>
 
     <script>
         var attribution = new ol.control.Attribution({
@@ -121,6 +149,7 @@
         // Function to initialize the map
         function initializeMap(latitude, longitude) {
             var position = ol.proj.fromLonLat([longitude, latitude]);
+            var wfsLayer = createWfsLayer();
             var map = new ol.Map({
                 controls: ol.control.defaults({ attribution: false }).extend([attribution]),
                 layers: [
@@ -128,7 +157,7 @@
                         source: new ol.source.OSM()
                     }),
                     createMarkerLayer(latitude, longitude),
-                    createWfsLayer() // Add WFS layer
+                    wfsLayer // Add WFS layer
                 ],
                 target: 'map',
                 view: new ol.View({
@@ -168,6 +197,24 @@
             window.addEventListener('message', function (event) {
                 var location = JSON.parse(event.data);
                 updateMapCenter(location.latitude, location.longitude);
+            });
+
+            // Add click event to display feature info
+            map.on('singleclick', function (evt) {
+                map.forEachFeatureAtPixel(evt.pixel, function (feature) {
+                    var properties = feature.getProperties();
+                    delete properties.geometry; // Remove geometry to make it more readable
+                    var table = '<table>';
+                    table += '<tr><th>Attraction</th><td>' + (properties.attraction || 'N/A') + '</td></tr>';
+                    table += '<tr><th>Name</th><td>' + (properties.name_en || 'N/A') + '</td></tr>';
+                    table += '<tr><th>Wheelchair Accessible</th><td>' + (properties.wheelchair_accessible || 'N/A') + '</td></tr>';
+                    table += '</table>';
+                    document.getElementById('info').innerHTML = table;
+                }, {
+                    layerFilter: function (layer) {
+                        return layer === wfsLayer;
+                    }
+                });
             });
         }
 
