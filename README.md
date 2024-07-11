@@ -4,7 +4,7 @@
 
 - Presenting workflow, motivation and Problems
 - Feature-Presentation
-- hot go get the Data for Routing, etc.
+- how to get the Data for Routing, etc.
 
 - Fyler(A4), no Scientific-Poster
   - Motivation, Features, presenting APP, Screenshot of APP, 1 or 2 technical details (getting Data of webservice or routing)
