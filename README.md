@@ -1,5 +1,16 @@
 # MobileGIS24
 
+## Presentation + Flyer
+
+- Presenting workflow, motivation and Problems
+- Feature-Presentation
+- hot go get the Data for Routing, etc.
+
+- Fyler(A4), no Scientific-Poster
+  - Motivation, Features, presenting APP, Screenshot of APP, 1 or 2 technical details (getting Data of webservice or routing)
+  - mix of scientific and features (what can the APP do?)
+  - presenting on GIK-Homepage
+
 ## Software to use:
 
 - git for version control and collaborating
